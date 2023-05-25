@@ -15,6 +15,9 @@ if __name__ == '__main__':
     grafoDois = GrafoLista()
     grafoDois.openFile('Exemplos/buscas.txt')
     grafoDois.imprimeGrafo()
+    grafoDois.welsh()
+    grafoDois.imprimeGrafo(cor=True)
+
     # print(grafoDois.grauVertice(6))
     # print(grafoDois.consultaCor(6))
     # print(grafoDois.labelsOrdenadosPorGrau())

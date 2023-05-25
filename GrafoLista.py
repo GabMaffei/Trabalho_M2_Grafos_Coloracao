@@ -13,11 +13,12 @@ class GrafoLista(Grafos):
                          ponderado)  # Direcionado = False significa que é direcionado, e True que não é Direcionado
         self.lista = list()
         self.labels = dict()  # Contém os nomes de vértices
-        self.listaCores = dict()  # Contém os labels e sua cor correspondente
+        self.dictCores = dict()  # Contém os labels e sua cor correspondente
 
         self.vertices = 0
         self.arestas = 0
-        self.cores = 0  # Tem uma cor / Cada cor aumenta em 1 esse número, e adiciona a cor correspondente ao número anterior
+        self.cores = 0  # EM REVISÃO: Tem uma cor / Cada cor aumenta em 1 esse número, e adiciona a cor correspondente ao número anterior
+        self.listaCores = list()
         # Exemplo: cores = 3, existem 4 cores, sendo 0,1,2,3
 
     def __str__(self):
@@ -212,11 +213,17 @@ class GrafoLista(Grafos):
         label = [k for k, v in self.labels.items() if v == indice]
         return (label[0])
 
-    def imprimeGrafo(self):
+    def imprimeGrafo(self, cor=True):
         # Imprimir o grafo no console, tentem deixar próximo da representação
         # dos slides (não precisa da grade da matriz).
-        for valor in range(self.vertices):
-            print(valor, ":", self.lista[valor])
+        if cor and self.cores > 0:
+            print("Cores:", self.cores)
+            for valor in range(self.vertices):
+                print(valor, " C-", self.consultaCor(valor), sep="",  end=" ")
+                print(":", self.lista[valor])
+        else:
+            for valor in range(self.vertices):
+                print(valor, ":", self.lista[valor])
 
     def inserirAresta(self, origem, destino, peso=1):
         # Essa operação deve ter um cuidado especial,
@@ -387,89 +394,127 @@ class GrafoLista(Grafos):
             label = list(self.labels.keys())[list(self.labels.values()).index(label)]
 
         # Define nome da vértice, para a cor
-        self.listaColorida[label] = cor
+        self.dictCores[label] = cor
 
     def consultaCor(self, vertice):
         # Converte os indices para labels
         if isinstance(vertice, int):
             vertice = list(self.labels.keys())[list(self.labels.values()).index(vertice)]
-        return self.listaColorida.get(vertice)
-
-    def welshOld(self):
-        cor = self.cores
-        for idx in self.labelsOrdenadosPorGrau():
-            # A cada vértice
-            for vizinho in self.retornarVizinhos(idx):
-                # A cada vizinho
-                if self.listaColorida.get(vizinho[0]) == cor:
-                    self.cores += 1
-                    cor = self.cores
-                    self.insereCor(idx, cor)
-                    break
-            else:
-                self.insereCor(idx, cor)
+        return self.dictCores.get(vertice)
 
     def welsh(self):
-        start_time = time.time()
-        cor = self.cores
-        first = True
-        Processando = True
-        while Processando:
-            for idx in self.labelsOrdenadosPorGrau():
-                if first:
-                    self.insereCor(idx, cor)
-                    first = False
-                    continue
-                # A cada vértice
-                for vizinho in self.retornarVizinhos(idx):
-                    # A cada vizinho
-                    # x = input("Pause")
-                    if self.listaColorida.get(vizinho[0]) == cor:
-                        break
-                    else:
-                        self.insereCor(idx, cor)
-                        continue
-                else:
-                    self.insereCor(idx, cor)
-            if len(self.listaColorida) == len(self.labels):
-                Processando = False
-                break
-            else:
-                self.cores += 1
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print("Elapsed time:", elapsed_time, "seconds")
-        return self.cores
+        inicio = time.time()
 
-    def welshNew(self):
-        start_time = time.time()
+        # etapa 1: ordenar as vertices do grafo conforme o seu grau, em ordem decrescente
+        grafo_ordenado = self.labelsOrdenadosPorGrau()
 
-        cor = self.cores
-        first = True
-        Processando = True
-        while Processando:
-            for idx in self.labelsOrdenadosPorGrau():
-                if first:
-                    self.insereCor(idx, cor)
-                    first = False
+        # etapa 2: para cada cor X na lista de cores
+        # define primeira cor
+        self.cores += 1  # Primeira cor: 1 / Cor Inicial
+        self.listaCores.append(self.cores)  # Lista de cores: [1]
+
+        # para cada cor X na lista de cores
+        for cor_atual in self.listaCores:
+            # i) navega pela lista de vertices ordenadas, e se o vertice não foi colorido ainda,
+            # e não é adjacente a uma vértice com a cor X atribuída, designa ela a ele mesmo, caso contrário move a
+            # próxima vértice.
+
+            # Navega pela lista de vertices ordenada conforme o grau:
+            for label_vertice_atual in grafo_ordenado:
+                # Se a vértice já foi colorida, remove ela da fila e pula para a próxima
+                if self.consultaCor(label_vertice_atual) is not None:
+                    grafo_ordenado.remove(label_vertice_atual)
                     continue
-                # A cada vértice
-                for vizinho in self.retornarVizinhos(idx):
-                    # A cada vizinho
-                    # x = input("Pause")
-                    if self.listaColorida.get(vizinho[0]) == cor:
-                        break
-                    else:
-                        self.insereCor(idx, cor)
-                        continue
-                else:
-                    self.insereCor(idx, cor)
-            if len(self.listaColorida) == len(self.labels):
-                Processando = False
+                # obtém cores dos vizinhos (vértices adjacentes)
+                vizinhos = self.retornarVizinhos(label_vertice_atual)  # retorna os labels dos vizinhos e seus indices
+                cor_vizinhos = list()  # lista de cores atribuídas aos vizinhos
+                for vizinho in vizinhos:
+                    cor_vizinhos.append(self.consultaCor(vizinho[0]))  # consulta cor do vizinho, com base no label
+                # Verifica se é adjacente a uma vértice com a cor X atribuída
+                if cor_atual not in cor_vizinhos:
+                    self.insereCor(label_vertice_atual, cor_atual)
+                    # grafo_ordenado.remove(label_vertice_atual) # Remove da lista atual, após inserir
+
+            # Validar se colorimos todas as vértices:
+            if not grafo_ordenado:  # listas vazias são falsas em python
                 break
-            else:
-                self.cores += 1
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print("Elapsed time:", elapsed_time, "seconds")
-        return self.cores
+
+            # ii) após a última vértice, move para  a próxima cor e começa novamente
+            self.cores += 1  # Próxima cor: 2 / Cor Inicial
+            self.listaCores.append(self.cores)  # Lista de cores: [1, 2]
+
+            # if self.cores < 2:
+            #     break
+
+        fim = time.time()
+        tempo_decorrido = fim - inicio
+        print("Tempo decorrido:", tempo_decorrido, "segundos")
+        print("Cores:", self.cores)
+
+    def welshDebug(self):
+        inicio = time.time()
+
+        # etapa 1: ordenar as vertices do grafo conforme o seu grau, em ordem decrescente
+        grafo_ordenado = self.labelsOrdenadosPorGrau()
+        print(grafo_ordenado)
+        # for i in grafo_ordenado:
+        #     print(self.lista[self.labels.get(i)])
+
+        # etapa 2: para cada cor X na lista de cores
+        # define primeira cor
+        self.cores += 1  # Primeira cor: 1 / Cor Inicial
+        self.listaCores.append(self.cores)  # Lista de cores: [1]
+
+        # para cada cor X na lista de cores
+        for cor_atual in self.listaCores:
+            # i) navega pela lista de vertices ordenadas, e se o vertice não foi colorido ainda,
+            # e não é adjacente a uma vértice com a cor X atribuída, designa ela a ele mesmo, caso contrário move a
+            # próxima vértice.
+
+            # Navega pela lista de vertices ordenada conforme o grau:
+            for label_vertice_atual in grafo_ordenado:
+                print('Início')
+                print('Grafo ordenado atual:', grafo_ordenado)
+                print('Label atual:', label_vertice_atual)
+                print('Consulta cor vertice atual', label_vertice_atual, 'cor:', self.consultaCor(label_vertice_atual))
+                # Se a vértice já foi colorida, remove ela da fila e pula para a próxima
+                if self.consultaCor(label_vertice_atual) is not None:
+                    grafo_ordenado.remove(label_vertice_atual)
+                    print('Novo grafo ordenado:', grafo_ordenado)
+                    print('Cor já preenchida, pular', '--------------------', sep='\n')
+                    continue
+                # obtém cores dos vizinhos (vértices adjacentes)
+                vizinhos = self.retornarVizinhos(label_vertice_atual)  # retorna os labels dos vizinhos e seus indices
+                cor_vizinhos = list()  # lista de cores atribuídas aos vizinhos
+                print('Vizinhos:', vizinhos)
+                for vizinho in vizinhos:
+                    print('Cor vizinho', vizinho[0], 'é', self.consultaCor(vizinho[0]))
+                    cor_vizinhos.append(self.consultaCor(vizinho[0]))  # consulta cor do vizinho, com base no label
+                print('Cores dos vizinhos são:', cor_vizinhos)
+                print('Cor atual do loop:', cor_atual)
+                # Verifica se é adjacente a uma vértice com a cor X atribuída
+                if cor_atual not in cor_vizinhos:
+                    print('Cor atual não está em cor_vizinhos')
+                    self.insereCor(label_vertice_atual, cor_atual)
+                    # grafo_ordenado.remove(label_vertice_atual) # Remove da lista atual, após inserir
+                    print('Cor da vértice atual', label_vertice_atual, 'cor:',self.consultaCor(label_vertice_atual))
+
+                print('--------------------')
+
+            # Validar se colorimos todas as vértices:
+            # print('Grafo ordenado atual:', grafo_ordenado)
+            if not grafo_ordenado:  # listas vazias são falsas em python
+                print('Lista vazia !!!')
+                break
+
+            # ii) após a última vértice, move para  a próxima cor e começa novamente
+            self.cores += 1  # Próxima cor: 2 / Cor Inicial
+            self.listaCores.append(self.cores)  # Lista de cores: [1, 2]
+
+            # if self.cores < 2:
+            #     break
+
+        fim = time.time()
+        tempo_decorrido = fim - inicio
+        print("Tempo decorrido:", tempo_decorrido, "segundos")
+        print("Cores:", self.cores)
