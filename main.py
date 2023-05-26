@@ -15,8 +15,13 @@ if __name__ == '__main__':
     grafoDois = GrafoLista()
     grafoDois.openFile('Exemplos/buscas.txt')
     grafoDois.imprimeGrafo()
-    grafoDois.welsh()
+    grafoDois.dsaturDebug()
     grafoDois.imprimeGrafo(cor=True)
+    # print(grafoDois.consultaSaturacao('4'))
+    # for vertice in grafoDois.labelsOrdenadosPorGrau():
+    #     print(grafoDois.consultaSaturacao(vertice))
+    # print(grafoDois.labelsOrdenadosPorGrau())
+    # print(grafoDois.ordenaPorSaturacao(grafoDois.labelsOrdenadosPorGrau()))
 
     # print(grafoDois.grauVertice(6))
     # print(grafoDois.consultaCor(6))
