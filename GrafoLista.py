@@ -44,14 +44,19 @@ class GrafoLista(Grafos):
             for vertice in range(int(verticesArquivo)):
                 self.inserirVertice(str(vertice))
 
-            if self.ponderado:
-                for aresta in range(int(arestasArquivo)):
-                    origem, destino, peso = (arquivo.readline()).split()
-                    self.inserirAresta(origem, destino, float(peso))
-            else:
-                for aresta in range(int(arestasArquivo)):
-                    origem, destino = (arquivo.readline()).split()
-                    self.inserirAresta(origem, destino)
+            try:
+
+                if self.ponderado:
+                    for aresta in range(int(arestasArquivo)):
+                        origem, destino, peso = (arquivo.readline()).split()
+                        self.inserirAresta(origem, destino, float(peso))
+                else:
+                    for aresta in range(int(arestasArquivo)):
+                        origem, destino = (arquivo.readline()).split()
+                        self.inserirAresta(origem, destino)
+
+            except Exception:
+                print('Linha vazia, ou com erros. Número de vértices lidas:', len(self.lista))
 
     def buscaProfunda(self, origem, destino):
         caminho = []

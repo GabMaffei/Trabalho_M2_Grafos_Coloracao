@@ -13,10 +13,10 @@ if __name__ == '__main__':
     # print(grafoUm.buscaDijkstra(0, 2))
 
     grafoDois = GrafoLista()
-    grafoDois.openFile('Exemplos/buscas.txt')
-    grafoDois.imprimeGrafo()
-    grafoDois.dsaturDebug()
-    grafoDois.imprimeGrafo(cor=True)
+    grafoDois.openFile('Exemplos/k33.txt')
+    # grafoDois.imprimeGrafo()
+    grafoDois.dsatur()
+    # grafoDois.imprimeGrafo(cor=True)
     # print(grafoDois.consultaSaturacao('4'))
     # for vertice in grafoDois.labelsOrdenadosPorGrau():
     #     print(grafoDois.consultaSaturacao(vertice))
